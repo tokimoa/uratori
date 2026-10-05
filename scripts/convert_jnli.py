@@ -1,6 +1,7 @@
 """JNLI を変換して data/external/jnli/ に書く。
 
-元データは JGLUE の GitHub（https://github.com/yahoojapan/JGLUE）から取り、JNLI の train と valid を
+元データは JGLUE の GitHub（https://github.com/yahoojapan/JGLUE）から取り、JNLI の train と valid
+（datasets/jnli-v1.3/ の train-v1.3.json と valid-v1.3.json。1 行 1 件の JSON）を、
 data/external/jnli/ に train.jsonl、valid.jsonl の名前で置いておく。変換後も CC BY-SA 4.0 を引き継ぐ。
 
 uv run python scripts/convert_jnli.py

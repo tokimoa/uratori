@@ -12,20 +12,24 @@ TypeSafe の Jev に着想を得た独立の実装で、TypeSafe とは関係が
 |------|------|
 | [tokimoa/uratori-ja-310m](https://huggingface.co/tokimoa/uratori-ja-310m) | ModernBERT-Ja-310M を土台にしたモデル。CPU で動く |
 | [tokimoa/uratori-ja-2b](https://huggingface.co/tokimoa/uratori-ja-2b) | Qwen3.5-2B を土台にしたモデル（LoRA を統合済み） |
+| [tokimoa/uratori-ja-4b](https://huggingface.co/tokimoa/uratori-ja-4b) | Qwen3.5-4B を土台にしたモデル（LoRA を統合済み）。最も精度が高い |
 | [tokimoa/uratori-ja-eval](https://huggingface.co/datasets/tokimoa/uratori-ja-eval) | 評価セット |
 
 uratori-ja-eval での Accuracy です。
 
 | モデル | test（802 件） | challenge（300 件） |
 |--------|----------------|---------------------|
+| uratori-ja-4b | 0.867 | 0.863 |
 | uratori-ja-2b | 0.766 | 0.800 |
 | uratori-ja-310m | 0.704 | 0.697 |
 
 ## インストール
 
-Python 3.11 以上と [uv](https://docs.astral.sh/uv/) を使います。clone したフォルダの中で次を実行します。
+Python 3.11 以上と [uv](https://docs.astral.sh/uv/) を使います。
 
 ```sh
+git clone https://github.com/tokimoa/uratori.git
+cd uratori
 uv sync --group train --group serve
 ```
 
@@ -87,7 +91,7 @@ TypeSafe の `/v1/systemone` と同じ形のリクエストを受けるサーバ
 uv run --group train --group serve python -m uratori.serve.app --model tokimoa/uratori-ja-310m --port 8000
 ```
 
-`--model` には Hub の repo id か、同じ形のローカルのフォルダを指定します。初回はモデルをダウンロードします。既定では CPU で動かし、`--device cuda` か `--device mps` で GPU を使います。`tokimoa/uratori-ja-2b` も同じ方法で指定できます。
+`--model` には Hub の repo id か、同じ形のローカルのフォルダを指定します。初回はモデルをダウンロードします。既定では CPU で動かし、`--device cuda` か `--device mps` で GPU を使います。`tokimoa/uratori-ja-2b` と `tokimoa/uratori-ja-4b` も同じ方法で指定できますが、GPU が要るので `--device cuda` を付けてください。
 
 ```sh
 curl -s http://127.0.0.1:8000/v1/systemone \

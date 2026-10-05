@@ -10,5 +10,5 @@ __pycache__/
 dist/
 
 # データ、checkpoint、LLM の応答のキャッシュは git に入れない
-data/
-runs/
+/data/
+/runs/

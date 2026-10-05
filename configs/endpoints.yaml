@@ -1,17 +1,17 @@
-# LLM の接続先。全て OpenAI 互換の chat completions。キーは環境変数から読む。
-# 価格は 1M トークンあたりのドル。費用の記録に使うだけで、請求額の正本ではない。
-# モデル名と価格は使う前に再確認する（確認日を書く）。
+# LLM の接続先。全て OpenAI 互換の chat completions。API キーはここには書かず、api_key_env の環境変数から読む。
+# price_in と price_out は 1M トークンあたりのドルで、費用の記録と上限（--budget-usd）に使う。
+# モデル名と価格は変わるので、使う前に提供元で確かめて書き換える。
+# 出力を学習データや公開データに使えるかは提供元の利用規約による。使う前に確かめる。
 
 deepseek-flash:
-  # 2026-10-02 確認。DeepSeek V4.1 Flash。規約 4.2 で出力を他モデルの学習に使える
   base_url: https://api.deepseek.com/v1
   api_key_env: DEEPSEEK_API_KEY
   model: deepseek-flash
-  price_in: 0.30    # ピーク。オフピークは半額
+  price_in: 0.30
   price_out: 1.20
-  max_tokens: 16384  # 推論のトークンも出力上限に数えられる。8192 では生成の 6 割が途中で切れた
+  max_tokens: 16384  # 推論のトークンも出力上限に数えられるので広く取る
 
-# 同じモデルで推論を軽くしたもの。生成の費用を抑えるために使う（既定の推論の強さは high）
+# 同じモデルで推論を軽くしたもの。生成の費用を抑えるために使う
 deepseek-flash-low:
   base_url: https://api.deepseek.com/v1
   api_key_env: DEEPSEEK_API_KEY
@@ -29,10 +29,10 @@ local-mlx:
   model: mlx-community/gemma-4-26b-a4b-it-4bit
   price_in: 0.0
   price_out: 0.0
-  max_tokens: 4096   # 思考つき。1024 では思考だけで使い切り、応答が空になる件が 3 割あった
+  max_tokens: 4096   # 思考つき。小さくすると思考だけで使い切り、応答が空になる
   json_mode: false
 
-# 同じモデルで思考を切ったもの。1 件 1 秒前後
+# 同じモデルで思考を切ったもの
 local-mlx-nothink:
   base_url: http://localhost:8089/v1
   api_key_env: null
@@ -45,37 +45,7 @@ local-mlx-nothink:
     chat_template_kwargs:
       enable_thinking: false
 
-# ---- 比較用の LLM judge ------------------------------------------------------------
-# 人手評価セットに対する比較にだけ使う。規約が競合モデルの学習に出力を使うことを禁じているので、
-# 出力を学習データにも公開データにも入れない。モデル名は 2026-10-02 に各社の API の一覧で確認した。
-
-gpt-6-luna:
-  base_url: https://api.openai.com/v1
-  api_key_env: OPENAI_API_KEY
-  model: gpt-6-luna
-  price_in: 0.10
-  price_out: 0.50
-  max_tokens: 8192
-  max_tokens_param: max_completion_tokens
-
-gemini-3.8-flash:
-  base_url: https://generativelanguage.googleapis.com/v1beta/openai
-  api_key_env: GEMINI_API_KEY
-  model: gemini-3.8-flash
-  price_in: 0.75
-  price_out: 3.75
-  max_tokens: 8192
-
-claude-haiku-4-5:
-  base_url: https://api.anthropic.com/v1
-  api_key_env: ANTHROPIC_API_KEY
-  model: claude-haiku-4-5-20251001
-  price_in: 1.00
-  price_out: 5.00
-  max_tokens: 2048
-  json_mode: false
-
-# ローカルの Gemma 4 を生成担当に使うとき。family 方式の応答は長いので上限を広く取る
+# ローカルのモデルを生成に使うとき。応答が長いので上限を広く取る
 local-mlx-gen:
   base_url: http://localhost:8089/v1
   api_key_env: null
@@ -83,19 +53,6 @@ local-mlx-gen:
   price_in: 0.0
   price_out: 0.0
   max_tokens: 6000
-  json_mode: false
-  extra_body:
-    chat_template_kwargs:
-      enable_thinking: false
-
-# ローカルの Qwen3.6-35B-A3B（Apache 2.0、MoE で動く部分は 3B）。思考なし
-local-qwen36-gen:
-  base_url: http://localhost:8089/v1
-  api_key_env: null
-  model: mlx-community/Qwen3.6-35B-A3B-4bit
-  price_in: 0.0
-  price_out: 0.0
-  max_tokens: 7000
   json_mode: false
   extra_body:
     chat_template_kwargs:
