@@ -1,0 +1,190 @@
+# 入力比較の rubric。2 つの文書や回答を state に入れて比べる。
+
+- id: cmp-contradict-noul
+  domain: compare
+  type: noul
+  question: "`文書A` と `文書B` の間に矛盾する記述はあるか"
+  criteria:
+    "true": 両立しない記述が 1 つ以上ある。
+    "false": 両立しない記述はない。片方にしかない記述は矛盾に数えない。
+  examples:
+    - kind: positive
+      state:
+        文書A: "定例会議は毎週火曜の10時から行う。"
+        文書B: "定例会議は毎週水曜の10時から行う。"
+      label: "true"
+    - kind: negative
+      state:
+        文書A: "定例会議は毎週火曜の10時から行う。"
+        文書B: "火曜10時の定例会議は第2会議室で行う。"
+      label: "false"
+    - kind: boundary
+      state:
+        文書A: "定例会議は原則として毎週火曜の10時から行う。"
+        文書B: "祝日の週は、定例会議を水曜に振り替える。"
+      label: "false"
+      note: A が「原則として」と断っているので、B の例外と両立する。A が例外を認めない書き方なら矛盾になる。
+
+- id: cmp-relation-4
+  domain: compare
+  type: choice
+  question: "`論点` について、`文書A` と `文書B` の記述はどういう関係か"
+  criteria:
+    一致: 同じ内容を述べている。
+    矛盾: 両立しない内容を述べている。
+    片方のみ: 片方にしか記述がなく、食い違いはない。
+    無関係: どちらもこの論点に触れていない。
+  examples:
+    - kind: positive
+      state:
+        論点: "契約期間"
+        文書A: "契約期間は2025年4月1日から1年間とする。"
+        文書B: "本契約は2025年4月1日に始まり、2026年3月31日に終わる。"
+      label: 一致
+    - kind: negative
+      state:
+        論点: "契約期間"
+        文書A: "契約期間は2025年4月1日から1年間とする。"
+        文書B: "本契約の期間は2025年4月1日から2年間とする。"
+      label: 矛盾
+    - kind: boundary
+      state:
+        論点: "契約期間"
+        文書A: "契約期間は2025年4月1日から1年間とする。"
+        文書B: "支払いは月末締め、翌月末払いとする。"
+      label: 片方のみ
+
+- id: cmp-same-content
+  domain: compare
+  type: noul
+  question: "`文A` と `文B` は同じ内容を述べているか"
+  criteria:
+    "true": 言い回しが違っても、伝えている事実が同じ。
+    "false": 事実が違う。または片方にしかない情報がある。
+  notes: 語順や敬語の違いは内容の違いにしない。数値、主体、時点、否定の違いは内容の違い。
+  examples:
+    - kind: positive
+      state:
+        文A: "山田さんが資料を佐藤さんに送った。"
+        文B: "佐藤さんは山田さんから資料を受け取った。"
+      label: "true"
+    - kind: negative
+      state:
+        文A: "山田さんが資料を佐藤さんに送った。"
+        文B: "佐藤さんが資料を山田さんに送った。"
+      label: "false"
+    - kind: boundary
+      state:
+        文A: "山田さんが資料を佐藤さんに送った。"
+        文B: "山田さんが資料を佐藤さんに昨日送った。"
+      label: "false"
+      note: B にだけ時点の情報がある。
+
+- id: cmp-added-claim
+  domain: compare
+  type: noul
+  question: "`文書B` には、`文書A` に書かれていない主張が含まれるか"
+  criteria:
+    "true": A からは読み取れない事実や判断が B にある。
+    "false": B の内容は全て A に書かれているか、A から直接言える。
+  examples:
+    - kind: positive
+      state:
+        文書A: "新機能は来月リリースする。対象は法人プランのみ。"
+        文書B: "新機能は来月、法人プラン向けにリリースする。個人プランへの展開は年内を予定している。"
+      label: "true"
+    - kind: negative
+      state:
+        文書A: "新機能は来月リリースする。対象は法人プランのみ。"
+        文書B: "来月、法人プランに限って新機能を出す。"
+      label: "false"
+    - kind: boundary
+      state:
+        文書A: "新機能は来月リリースする。対象は法人プランのみ。"
+        文書B: "新機能は来月リリースする。個人プランは対象外。"
+      label: "false"
+      note: 「法人プランのみ」から直接言える。
+
+- id: cmp-more-faithful
+  domain: compare
+  type: choice
+  question: "`回答A` と `回答B` のうち、`根拠` に忠実なのはどちらか"
+  criteria:
+    回答A: A のほうが根拠に忠実。
+    回答B: B のほうが根拠に忠実。
+    同程度: 忠実さに差がない。どちらも忠実、どちらも不忠実の両方を含む。
+  notes: 文章の丁寧さや長さでは比べない。根拠にない内容と、根拠との食い違いだけを見る。
+  examples:
+    - kind: positive
+      state:
+        根拠: "送料は購入金額が5,000円以上で無料になる。"
+        回答A: "5,000円以上のご購入で送料が無料になります。"
+        回答B: "3,000円以上のご購入で送料が無料になります。"
+      label: 回答A
+    - kind: negative
+      state:
+        根拠: "送料は購入金額が5,000円以上で無料になる。"
+        回答A: "送料は常に無料です。"
+        回答B: "5,000円以上なら送料はかかりません。"
+      label: 回答B
+    - kind: boundary
+      state:
+        根拠: "送料は購入金額が5,000円以上で無料になる。"
+        回答A: "5,000円以上で送料無料です。"
+        回答B: "お買い上げ金額が5,000円以上の場合、送料は無料とさせていただいております。ぜひご利用ください。"
+      label: 同程度
+      note: B は丁寧で長いが、忠実さは同じ。
+
+- id: cmp-change-significance
+  domain: compare
+  type: score
+  held_out: true
+  question: "`旧版` から `新版` への変更は、内容にどの程度影響するか"
+  criteria:
+    - 表記や言い回しだけの変更で、意味は変わらない。
+    - 情報の追加や削除はあるが、既存の記述の意味は変わらない。
+    - 既存の記述の意味が変わる。数値、条件、主体、可否の変更を含む。
+  examples:
+    - kind: positive
+      state:
+        旧版: "解約は月末までに申し出ること。"
+        新版: "解約は前月末までに申し出ること。"
+      label: "2"
+    - kind: negative
+      state:
+        旧版: "解約は月末までに申し出ること。"
+        新版: "解約は、月末までにお申し出ください。"
+      label: "0"
+    - kind: boundary
+      state:
+        旧版: "解約は月末までに申し出ること。"
+        新版: "解約は月末までに申し出ること。申し出は書面またはメールで行う。"
+      label: "1"
+
+- id: cmp-entailment-direction
+  domain: compare
+  type: choice
+  held_out: true
+  question: "`文A` と `文B` の含意関係はどれか"
+  criteria:
+    AがBを含意: A が正しければ B も必ず正しい。逆は言えない。
+    BがAを含意: B が正しければ A も必ず正しい。逆は言えない。
+    双方向: どちらが正しくても、もう一方も必ず正しい。
+    含意なし: どちらの向きにも言えない。
+  examples:
+    - kind: positive
+      state:
+        文A: "全ての支店で売上が前年を上回った。"
+        文B: "大阪支店の売上は前年を上回った。"
+      label: AがBを含意
+      note: 大阪支店が支店の 1 つであることは文から分かる。
+    - kind: negative
+      state:
+        文A: "大阪支店の売上は前年を上回った。"
+        文B: "名古屋支店の売上は前年を上回った。"
+      label: 含意なし
+    - kind: boundary
+      state:
+        文A: "売上が前年を上回った支店はなかった。"
+        文B: "どの支店も、売上は前年以下だった。"
+      label: 双方向

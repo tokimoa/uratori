@@ -1,0 +1,67 @@
+[project]
+name = "uratori"
+version = "0.1.0"
+description = "日本語の文章と型つきの質問（真偽、選択、段階評価）から確率分布を返す判定モデルの、学習・評価・配信のコード"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [
+    { name = "tokimoa" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.28.1",
+    "json-repair>=0.63.5",
+    "numpy>=2.0",
+    "pyarrow>=25.0.1",
+    "pydantic>=2.9",
+    "pyyaml>=6.0.3",
+]
+
+[project.scripts]
+uratori-validate = "uratori.data.validate:main"
+uratori-eval = "uratori.eval.report:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+]
+export = [
+    "onnx>=1.23.1",
+    "onnxruntime>=1.30.0",
+    "onnxscript>=0.7.2",
+]
+mlx = [
+    "mlx-lm>=0.32.0",
+]
+serve = [
+    "fastapi>=0.142.2",
+    "uvicorn>=0.54.0",
+]
+train = [
+    "peft>=0.21.2",
+    "protobuf>=7.36.2",
+    "sentencepiece>=0.2.2",
+    "torch>=2.14.1",
+    "transformers>=5.18.0",
+]
+
+[tool.uv.build-backend]
+module-name = "uratori"
+
+[build-system]
+requires = ["uv_build>=0.12.13,<0.13.0"]
+build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+# 日本語の文字列は幅で数えられて超えやすい。行の長さは formatter に任せる
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
