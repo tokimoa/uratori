@@ -1,31 +1,33 @@
 # uratori
 
-Japanese decision models that take a text state plus typed questions (noul = yes/no, choice, score) and return probability distributions in one forward pass, without generating text. This repository holds the code for training, evaluation, and a `/v1/systemone`-compatible HTTP server. The models ([uratori-ja-310m](https://huggingface.co/tokimoa/uratori-ja-310m), [uratori-ja-2b](https://huggingface.co/tokimoa/uratori-ja-2b)) and the evaluation set ([uratori-ja-eval](https://huggingface.co/datasets/tokimoa/uratori-ja-eval)) are on Hugging Face. Inspired by TypeSafe's Jev; an independent implementation, not affiliated with TypeSafe. Apache-2.0.
+[日本語版 README](README_ja.md)
 
-日本語の文章（state）と型つきの質問を渡すと、文章を生成せずに、真偽（noul）、選択（choice）、段階評価（score）の確率分布を 1 回の forward で返すモデルです。この repository には、学習、評価、HTTP サーバのコードを置いています。与えた根拠に主張が支持されるかの検証、2 つの文書の比較、RAG の判断（検索結果の関連性と十分性、回答の忠実性）を対象にしています。
+uratori is a family of Japanese *decision models*. Given a text state (for example a source document and a claim) and typed questions, a model returns a probability distribution over the allowed answers in one forward pass, without generating text. Three question types are supported: **noul** (yes/no), **choice** (one of 2 to 8 labelled options) and **score** (an ordinal scale).
 
-TypeSafe の Jev に着想を得た独立の実装で、TypeSafe とは関係がありません。
+The models are trained for three jobs:
 
-## 公開しているモデルと評価セット
+- **Grounding**: is this claim or answer supported by the supplied text?
+- **Document comparison**: do these two texts contradict each other, or did an edit change the meaning?
+- **RAG judgments**: is this passage relevant to the question, is it sufficient, is the answer faithful to it?
 
-| 名前 | 内容 |
-|------|------|
-| [tokimoa/uratori-ja-310m](https://huggingface.co/tokimoa/uratori-ja-310m) | ModernBERT-Ja-310M を土台にしたモデル。CPU で動く |
-| [tokimoa/uratori-ja-2b](https://huggingface.co/tokimoa/uratori-ja-2b) | Qwen3.5-2B を土台にしたモデル（LoRA を統合済み） |
-| [tokimoa/uratori-ja-4b](https://huggingface.co/tokimoa/uratori-ja-4b) | Qwen3.5-4B を土台にしたモデル（LoRA を統合済み）。最も精度が高い |
-| [tokimoa/uratori-ja-eval](https://huggingface.co/datasets/tokimoa/uratori-ja-eval) | 評価セット |
+The request and response format follows TypeSafe's `/v1/systemone` API, so the same question definitions can be sent to either. uratori is an independent implementation inspired by TypeSafe's Jev and is not affiliated with TypeSafe.
 
-uratori-ja-eval での Accuracy です。
+This repository contains the training, evaluation and serving code. The models and the evaluation set are on Hugging Face.
 
-| モデル | test（802 件） | challenge（300 件） |
-|--------|----------------|---------------------|
-| uratori-ja-4b | 0.867 | 0.863 |
-| uratori-ja-2b | 0.766 | 0.800 |
-| uratori-ja-310m | 0.704 | 0.697 |
+## Models and evaluation set
 
-## インストール
+| | Base | Size | Runs on | test (802) | challenge (300) |
+|---|---|---|---|---|---|
+| [tokimoa/uratori-ja-4b](https://huggingface.co/tokimoa/uratori-ja-4b) | Qwen3.5-4B | 8.4 GB | GPU, about 12 GB | 0.867 | 0.863 |
+| [tokimoa/uratori-ja-2b](https://huggingface.co/tokimoa/uratori-ja-2b) | Qwen3.5-2B | 3.8 GB | GPU, about 6 GB | 0.766 | 0.800 |
+| [tokimoa/uratori-ja-310m](https://huggingface.co/tokimoa/uratori-ja-310m) v0.2 | ModernBERT-Ja-310M | 1.3 GB | CPU | 0.686 | 0.693 |
+| [tokimoa/uratori-ja-eval](https://huggingface.co/datasets/tokimoa/uratori-ja-eval) | | 2,002 items | | | |
 
-Python 3.11 以上と [uv](https://docs.astral.sh/uv/) を使います。
+Accuracy on uratori-ja-eval, measured with the published weights. For reference, TypeSafe's Jev 1.13.0 scores 0.903 and 0.900 on the same splits. Labels in the evaluation set are LLM majority votes, not human annotations; see the dataset card for how it was built and what it does not measure.
+
+## Install
+
+Python 3.11 or newer and [uv](https://docs.astral.sh/uv/).
 
 ```sh
 git clone https://github.com/tokimoa/uratori.git
@@ -33,20 +35,22 @@ cd uratori
 uv sync --group train --group serve
 ```
 
-依存はグループに分けてあります。グループなしで入るのは、データの schema、評価指標、LLM のクライアントまでです。`train` は torch と transformers（学習と推論）、`serve` は HTTP サーバ、`export` は ONNX への書き出し、`mlx` はローカルの MLX サーバ（合成データの生成と検証に使う）を足します。
+Dependency groups: the base install has the data schema, metrics and LLM client; `train` adds torch and transformers (needed for inference too); `serve` adds the HTTP server; `export` adds ONNX export; `mlx` adds a local MLX server used for synthetic data generation on Apple silicon.
 
-## クイックスタート
+To use the published models you do not need this repository at all: `pip install torch transformers` is enough, as shown next.
 
-### Python から使う
+## Quickstart
 
-公開しているモデルは transformers だけで読めます。モデルの repo に同梱されたコードを実行するので、`trust_remote_code=True` が必要です。
+### Python
+
+The published models carry their own code, so `trust_remote_code=True` is required.
 
 ```python
 from transformers import AutoModel, AutoTokenizer
 
 repo = "tokimoa/uratori-ja-310m"
 tokenizer = AutoTokenizer.from_pretrained(repo, trust_remote_code=True)
-model = AutoModel.from_pretrained(repo, trust_remote_code=True).eval()
+model = AutoModel.from_pretrained(repo, trust_remote_code=True).eval()  # add .to("cuda") for the 2b and 4b models
 
 state = {
     "根拠": "返品は商品到着後14日以内に限り受け付けます。開封済みの商品は返品できません。",
@@ -70,28 +74,30 @@ questions = {
 }
 answers = model.predict(tokenizer, state, questions)
 print(answers["support"]["choice"], answers["support"]["probabilities"])
+# 矛盾 {'支持': 0.12, '矛盾': 0.71, '情報不足': 0.17}
 print(answers["contradict"]["noul"])
+# 0.76
 ```
 
-`state` は文字列か、名前つきの文章の dict です。dict のキーは、質問文から `` `キー名` `` で参照できます。1 回の呼び出しに質問をいくつでも入れられ、質問どうしは独立に判定されます。
+`state` is a string or a dict of named texts; dict keys can be referenced from a question as `` `key` ``. Questions in one call share the state and are judged independently. Probabilities are temperature-scaled by default (`calibrate=False` for the raw softmax). Inputs longer than the model's limit (1,024 tokens for 310m, 1,280 for 2b and 4b) raise a `ValueError` instead of being truncated.
 
-質問の型は 3 つあります。
+Question types:
 
-| type | criteria | 返る値 |
-|------|----------|--------|
-| `noul` | `{"true": "…", "false": "…"}`（省略可） | `noul`（はいの確率） |
-| `choice` | `{"候補": "説明", …}`（2〜8 個） | `choice`、`probabilities`、`confidence` |
-| `score` | `["段階 0 の説明", "段階 1 の説明", …]`（低い順、2〜10 段階） | `score`（期待値）、`probabilities`、`confidence` |
+| `type` | `criteria` | Returns |
+|---|---|---|
+| `noul` | `{"true": "...", "false": "..."}`, optional but recommended | `noul`: probability of yes |
+| `choice` | `{label: description}`, 2 to 8 options | `choice`, `probabilities`, `confidence` |
+| `score` | list of level descriptions, lowest first, 2 to 10 levels | `score` (expected level), `probabilities`, `legend`, `confidence` |
 
-### サーバとして使う
+### HTTP server
 
-TypeSafe の `/v1/systemone` と同じ形のリクエストを受けるサーバを立てます。
+The server accepts the same request shape as TypeSafe's `/v1/systemone`.
 
 ```sh
 uv run --group train --group serve python -m uratori.serve.app --model tokimoa/uratori-ja-310m --port 8000
 ```
 
-`--model` には Hub の repo id か、同じ形のローカルのフォルダを指定します。初回はモデルをダウンロードします。既定では CPU で動かし、`--device cuda` か `--device mps` で GPU を使います。`tokimoa/uratori-ja-2b` と `tokimoa/uratori-ja-4b` も同じ方法で指定できますが、GPU が要るので `--device cuda` を付けてください。
+`--model` takes a Hub repo id or a local folder in the same format; the model is downloaded on first use. The default device is `cpu`; pass `--device cuda` (or `mps`) for the 2b and 4b models. To serve a checkpoint you trained yourself, pass `--ckpt <folder>` instead of `--model`.
 
 ```sh
 curl -s http://127.0.0.1:8000/v1/systemone \
@@ -121,7 +127,7 @@ curl -s http://127.0.0.1:8000/v1/systemone \
   }'
 ```
 
-応答は次の形です（数値は小数第 3 位で丸めて示しています）。
+Response (probabilities rounded here):
 
 ```json
 {
@@ -130,55 +136,51 @@ curl -s http://127.0.0.1:8000/v1/systemone \
     "support": {
       "type": "choice",
       "choice": "矛盾",
-      "probabilities": {"支持": 0.093, "矛盾": 0.822, "情報不足": 0.085},
-      "confidence": 0.732
+      "probabilities": {"支持": 0.12, "矛盾": 0.71, "情報不足": 0.17},
+      "confidence": 0.57
     },
-    "contradict": {"type": "noul", "noul": 0.716}
+    "contradict": {"type": "noul", "noul": 0.76}
   },
   "usage": {"input_tokens": 194, "output_tokens": 0}
 }
 ```
 
-リクエストの `model` は必須ですが、サーバは起動時に読み込んだモデルで答えます。入力がモデルの上限（uratori-ja-310m は 1,024 トークン）を超えると、切り詰めずに 422 を返します。ほかに `GET /healthz` と `GET /v1/models` があります。認証はなく、既定では 127.0.0.1 だけで待ち受けます。
+The `model` field is required by the schema but the server always answers with the model it loaded. Inputs over the model's token limit get a 422 instead of being truncated. `GET /healthz` and `GET /v1/models` are also available. There is no authentication and the server binds to 127.0.0.1 by default.
 
-自分で学習した checkpoint で立てるときは、`--model` の代わりに `--ckpt <フォルダ>` を指定します。
-
-## 評価
-
-公開しているモデルを uratori-ja-eval で測るには、次を実行します。評価セットは Hub から取ってきます。
+## Evaluate on uratori-ja-eval
 
 ```sh
 uv run --group train python scripts/eval_hub.py --model tokimoa/uratori-ja-310m --device cpu
 ```
 
-既定では test と challenge を測り、split ごとに Accuracy などを 1 行の JSON で出力します。`runs/eval_hub/<モデル名>/` には、予測（`pred__<split>.jsonl`）、レポート（`report__<split>.md`）、この repository の形式に直した評価データ（`<split>.jsonl`）を書きます。`--split` で split を、`--ckpt` で自分の checkpoint を指定できます。
+This downloads the evaluation set from the Hub, runs the `test` and `challenge` splits by default, prints one JSON line per split (accuracy, macro F1, ECE, bootstrap confidence intervals by document family) and writes predictions and Markdown reports under `runs/eval_hub/<model>/`. Use `--split` to choose splits and `--device cuda` for the larger models.
 
-自分で学習した checkpoint を手元のデータで測るスクリプトもあります。どれも先頭のコメントに使い方を書いてあります。
+Scripts for checkpoints you trained yourself (usage is in each file's docstring):
 
-| スクリプト | 内容 |
-|------------|------|
-| `scripts/eval_ckpt.py` | 複数の評価データで測り、予測とレポートを checkpoint のフォルダに書く |
-| `scripts/calibrate_ckpt.py` | 校正用のデータで温度を合わせ、校正前後の指標を比べる |
-| `scripts/position_probe.py` | 候補の順番を逆にしても答えが変わらないかを調べる |
-| `scripts/noul_probe.py` | noul の criteria を外しても答えられるかを調べる |
-| `scripts/predict.py` | 予測だけを書き出す。`uv run uratori-eval` で採点できる |
+| Script | Purpose |
+|---|---|
+| `scripts/eval_ckpt.py` | Evaluate a checkpoint on one or more data files; writes predictions and reports next to the checkpoint |
+| `scripts/calibrate_ckpt.py` | Fit temperatures on a calibration file and compare metrics before and after |
+| `scripts/position_probe.py` | Check whether answers change when option order is reversed |
+| `scripts/noul_probe.py` | Check whether noul questions still work without `criteria` |
+| `scripts/predict.py` | Write predictions only; score them with `uv run uratori-eval` |
 
-## 学習
+## Train
 
-学習データは 1 行 1 件の JSONL で、1 件が「state と 1 つの質問、その正解」です。形式の見本が `examples/sample_records.jsonl` にあり、schema は `src/uratori/data/schema.py` です。作ったデータは次のコマンドで検査できます。
+Training data is JSONL, one record per line: a state, one question and its answer. `examples/sample_records.jsonl` shows the format and `src/uratori/data/schema.py` defines it. Validate a file with:
 
 ```sh
 uv run uratori-validate examples/sample_records.jsonl
 ```
 
-エンコーダを全層学習する例です。
+Full fine-tuning of an encoder:
 
 ```sh
 uv run --group train python scripts/train.py --model sbintuitions/modernbert-ja-310m \
     --train data/train.jsonl --dev data/dev.jsonl --out runs/mbj310 --device cuda
 ```
 
-デコーダは LoRA で学習します。
+LoRA on a decoder:
 
 ```sh
 uv run --group train python scripts/train.py --model Qwen/Qwen3.5-2B \
@@ -186,47 +188,64 @@ uv run --group train python scripts/train.py --model Qwen/Qwen3.5-2B \
     --lora 32 --model-dtype bf16 --autocast --device cuda
 ```
 
-`scripts/` のスクリプトは `--device` の既定が `mps`（Apple silicon）です。ほかの環境では `--device cuda` か `--device cpu` を指定してください。
+Scripts default to `--device mps` (Apple silicon); pass `--device cuda` or `--device cpu` elsewhere.
 
-公開しているモデルは、JNLI を判定の形式に直したデータで先に学習し、その重みから（`--init-from`）LLM で生成した合成データで学習したものです。学習データそのものは、この repository に含めていません。
-先に学習する段階の出来は、実行ごとに変わります。310m で同じ設定の学習をやり直したところ、JNLI の検証データでの正答率はほぼ同じ（0.92〜0.93）でも、その後の最終的な正答率が 0.62 から 0.71 まで開きました。差が出た実行は、JNLI の検証データでの NLL が高く（0.34。良かった実行は 0.24〜0.29）、過信が強くなっていました。先に学習した重みは、正答率ではなく NLL を見て選んでください。公開している 310m の数字は、うまくいった実行のものです。
+### How the published models were trained
 
-同じ流れを再現するためのコードは次のとおりです。
+Two stages, each a run of `scripts/train.py`:
 
-| スクリプト | 内容 |
-|------------|------|
-| `scripts/convert_jnli.py` | JNLI をこの repository の形式に直す |
-| `scripts/generate.py` | LLM に原文と問題を書かせて、合成データの候補を作る |
-| `scripts/verify_and_build.py` | 候補を別の LLM に判定させ、ラベルが一致した件で学習用のデータを組み立てる |
-| `scripts/build_unverified.py` | 検証前の候補から学習用のデータを組み立てる |
-| `scripts/judge_with_llm.py` | データを LLM に判定させる（比較用の基準値や、評価データのラベル付けに使う） |
+1. **Stage 1**: JNLI (JGLUE) converted to the decision format with `scripts/convert_jnli.py` (19,816 items; support/contradict/neutral choice questions and yes/no questions). 2 to 3 epochs, 256 tokens.
+2. **Stage 2**: 49,668 synthetic items generated with an LLM from fictional business documents, government FAQs and Wikipedia paragraphs, started from the stage-1 weights with `--init-from`. 1 epoch, 1,024 to 1,280 tokens. For the 310m model, 30% of noul items are shown without criteria and 50% of choice items with shuffled options (`--aug-noul-drop 0.3 --aug-choice-shuffle 0.5`).
 
-生成と判定に使う LLM の接続先は `configs/endpoints.yaml` に書きます。API キーはファイルには書かず、接続先ごとの環境変数（`DEEPSEEK_API_KEY` など）から読みます。質問文と criteria の定義は `rubrics/` にあります。
+Exact hyperparameters are in each model card. The synthetic training data is not included in this repository; the code that produced it is:
 
-## 構成
+| Script | Purpose |
+|---|---|
+| `scripts/convert_jnli.py` | Convert JNLI into this repository's format |
+| `scripts/generate.py` | Have an LLM write documents and questions; produces candidate items |
+| `scripts/verify_and_build.py` | Have a second LLM judge the candidates and keep the ones whose labels agree |
+| `scripts/build_unverified.py` | Build training files from unverified candidates |
+| `scripts/judge_with_llm.py` | Label data with an LLM (used for baselines and for evaluation labels) |
+
+LLM endpoints are configured in `configs/endpoints.yaml`; API keys are read from environment variables (`DEEPSEEK_API_KEY` and so on), never from the file. Question templates and their criteria are in `rubrics/`.
+
+Results vary between runs. For the 310m model, repeating both stages with the same settings gave final test accuracies between 0.62 and 0.71; the low runs had a visibly higher validation NLL after stage 1 (0.34 against 0.24 to 0.29) even though their accuracy on the JNLI validation set was the same. If you retrain, run stage 1 more than once and keep the checkpoint with the lowest validation NLL.
+
+## Repository layout
 
 ```text
 src/uratori/
-  types.py, serialize.py   質問の型と、モデル入力への直列化
-  models/, train/          候補マーカーを採点するモデル、損失、学習のループ
-  eval/                    指標、レポート、温度による校正
-  serve/                   HTTP サーバ、ONNX への書き出し
-  data/                    データの schema、validator、rubric の読み込み
-  gen/, llm/               合成データの生成、LLM のクライアントと判定
-scripts/                   学習、評価、データ作成のスクリプト
-rubrics/                   質問文と criteria の定義
-configs/                   LLM の接続先
-examples/                  データ形式の見本
+  types.py, serialize.py   question types and serialisation into model input
+  models/, train/          option-marker scorer, losses, training loop
+  eval/                    metrics, reports, temperature calibration
+  serve/                   HTTP server, ONNX export
+  data/                    schema, validator, rubric loading, public-set conversion
+  gen/, llm/               synthetic data generation, LLM client and judge
+scripts/                   training, evaluation and data scripts
+rubrics/                   question templates and criteria
+configs/                   LLM endpoints
+examples/                  sample data
 tests/
 ```
 
-テストと lint は次のコマンドで実行します。
+Tests and lint:
 
 ```sh
 uv run --group train --group serve --group export pytest -q
 uv run ruff check . && uv run ruff format --check .
 ```
 
-## ライセンス
+## License
 
-コードは Apache License 2.0 です。モデルと評価セットのライセンスは、それぞれの Hugging Face のページに書いてあります。
+Apache License 2.0. See each model card for the license of its base model.
+
+## Citation
+
+```bibtex
+@misc{uratori2026,
+  title  = {uratori: Japanese decision models for grounding checks, document comparison and RAG judgments},
+  author = {tokimoa},
+  year   = {2026},
+  url    = {https://github.com/tokimoa/uratori}
+}
+```
