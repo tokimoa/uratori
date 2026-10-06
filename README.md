@@ -21,9 +21,11 @@ This repository contains the training, evaluation and serving code. The models a
 | [tokimoa/uratori-ja-4b](https://huggingface.co/tokimoa/uratori-ja-4b) | Qwen3.5-4B | 8.4 GB | GPU, about 12 GB | 0.867 | 0.863 |
 | [tokimoa/uratori-ja-2b](https://huggingface.co/tokimoa/uratori-ja-2b) | Qwen3.5-2B | 3.8 GB | GPU, about 6 GB | 0.766 | 0.800 |
 | [tokimoa/uratori-ja-310m](https://huggingface.co/tokimoa/uratori-ja-310m) v0.2 | ModernBERT-Ja-310M | 1.3 GB | CPU | 0.686 | 0.693 |
+| [tokimoa/uratori-ja-2b-mlx-8bit](https://huggingface.co/tokimoa/uratori-ja-2b-mlx-8bit), [-4bit](https://huggingface.co/tokimoa/uratori-ja-2b-mlx-4bit) | MLX versions of 2b for Apple silicon | 2.0 / 1.1 GB | Mac | 0.768 / 0.754 | 0.807 / 0.783 |
+| [tokimoa/uratori-ja-4b-mlx-8bit](https://huggingface.co/tokimoa/uratori-ja-4b-mlx-8bit), [-4bit](https://huggingface.co/tokimoa/uratori-ja-4b-mlx-4bit) | MLX versions of 4b for Apple silicon | 4.5 / 2.4 GB | Mac | 0.865 / 0.857 | 0.863 / 0.853 |
 | [tokimoa/uratori-ja-eval](https://huggingface.co/datasets/tokimoa/uratori-ja-eval) | | 2,002 items | | | |
 
-Accuracy on uratori-ja-eval, measured with the published weights. For reference, TypeSafe's Jev 1.13.0 scores 0.903 and 0.900 on the same splits. Labels in the evaluation set are LLM majority votes, not human annotations; see the dataset card for how it was built and what it does not measure.
+Accuracy on uratori-ja-eval, measured with the published weights. The 310m model also ships an ONNX export (float32 and INT8) in its `onnx/` folder, runnable without PyTorch. For reference, TypeSafe's Jev 1.13.0 scores 0.903 and 0.900 on the same splits. Labels in the evaluation set are LLM majority votes, not human annotations; see the dataset card for how it was built and what it does not measure.
 
 ## Install
 

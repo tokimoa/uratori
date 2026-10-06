@@ -13,6 +13,8 @@
 | [tokimoa/uratori-ja-310m](https://huggingface.co/tokimoa/uratori-ja-310m) v0.2 | ModernBERT-Ja-310M を土台にしたモデル。CPU で動く |
 | [tokimoa/uratori-ja-2b](https://huggingface.co/tokimoa/uratori-ja-2b) | Qwen3.5-2B を土台にしたモデル（LoRA を統合済み） |
 | [tokimoa/uratori-ja-4b](https://huggingface.co/tokimoa/uratori-ja-4b) | Qwen3.5-4B を土台にしたモデル（LoRA を統合済み）。最も精度が高い |
+| [tokimoa/uratori-ja-2b-mlx-8bit](https://huggingface.co/tokimoa/uratori-ja-2b-mlx-8bit)、[-4bit](https://huggingface.co/tokimoa/uratori-ja-2b-mlx-4bit) | 2b の MLX 版（Apple silicon） |
+| [tokimoa/uratori-ja-4b-mlx-8bit](https://huggingface.co/tokimoa/uratori-ja-4b-mlx-8bit)、[-4bit](https://huggingface.co/tokimoa/uratori-ja-4b-mlx-4bit) | 4b の MLX 版（Apple silicon） |
 | [tokimoa/uratori-ja-eval](https://huggingface.co/datasets/tokimoa/uratori-ja-eval) | 評価セット |
 
 uratori-ja-eval での Accuracy です（公開した重みで測った値）。参考として、TypeSafe の Jev 1.13.0 は同じ split で 0.903 と 0.900 です。評価セットの正解は人が付けたものではなく LLM の多数決です。作り方と測れないことは評価セットのカードに書いてあります。
@@ -22,6 +24,8 @@ uratori-ja-eval での Accuracy です（公開した重みで測った値）。
 | uratori-ja-4b | 0.867 | 0.863 |
 | uratori-ja-2b | 0.766 | 0.800 |
 | uratori-ja-310m v0.2 | 0.686 | 0.693 |
+| 2b の MLX 8bit / 4bit | 0.768 / 0.754 | 0.807 / 0.783 |
+| 4b の MLX 8bit / 4bit | 0.865 / 0.857 | 0.863 / 0.853 |
 
 ## インストール
 
