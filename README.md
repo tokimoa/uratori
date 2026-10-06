@@ -19,6 +19,7 @@ This repository contains the training, evaluation and serving code. The models a
 | | Base | Size | Runs on | test (802) | challenge (300) |
 |---|---|---|---|---|---|
 | [tokimoa/uratori-ja-4b](https://huggingface.co/tokimoa/uratori-ja-4b) | Qwen3.5-4B | 8.4 GB | GPU, about 12 GB | 0.867 | 0.863 |
+| [tokimoa/uratori-ja-9b](https://huggingface.co/tokimoa/uratori-ja-9b) | Qwen3.5-9B | 16 GB | GPU, about 24 GB (8 GB with 4-bit loading) | 0.887 | 0.903 |
 | [tokimoa/uratori-ja-2b](https://huggingface.co/tokimoa/uratori-ja-2b) | Qwen3.5-2B | 3.8 GB | GPU, about 6 GB | 0.766 | 0.800 |
 | [tokimoa/uratori-ja-310m](https://huggingface.co/tokimoa/uratori-ja-310m) v0.2 | ModernBERT-Ja-310M | 1.3 GB | CPU | 0.686 | 0.693 |
 | [tokimoa/uratori-ja-2b-mlx-8bit](https://huggingface.co/tokimoa/uratori-ja-2b-mlx-8bit), [-4bit](https://huggingface.co/tokimoa/uratori-ja-2b-mlx-4bit) | MLX versions of 2b for Apple silicon | 2.0 / 1.1 GB | Mac | 0.768 / 0.754 | 0.807 / 0.783 |
