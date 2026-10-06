@@ -82,7 +82,7 @@ print(answers["contradict"]["noul"])
 # 0.76
 ```
 
-`state` is a string or a dict of named texts; dict keys can be referenced from a question as `` `key` ``. Questions in one call share the state and are judged independently. Probabilities are temperature-scaled by default (`calibrate=False` for the raw softmax). Inputs longer than the model's limit (1,024 tokens for 310m, 1,280 for 2b and 4b) raise a `ValueError` instead of being truncated.
+`state` is a string or a dict of named texts; dict keys can be referenced from a question as `` `key` ``. Questions in one call share the state and are judged independently. Probabilities are temperature-scaled by default (`calibrate=False` for the raw softmax). Inputs longer than the model's limit (1,024 tokens for 310m, 2,048 for 2b, 4b and 9b) raise a `ValueError` instead of being truncated.
 
 Question types:
 
