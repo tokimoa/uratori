@@ -20,7 +20,7 @@ This repository contains the training, evaluation and serving code. The models a
 |---|---|---|---|---|---|
 | [tokimoa/uratori-ja-4b](https://huggingface.co/tokimoa/uratori-ja-4b) v1.1 | Qwen3.5-4B | 8.4 GB | GPU, about 12 GB (4 GB with 4-bit loading) | 0.872 | 0.870 |
 | [tokimoa/uratori-ja-9b](https://huggingface.co/tokimoa/uratori-ja-9b) v1.1 | Qwen3.5-9B | 16 GB | GPU, about 24 GB (8 GB with 4-bit loading) | 0.897 | 0.913 |
-| [tokimoa/uratori-ja-2b](https://huggingface.co/tokimoa/uratori-ja-2b) | Qwen3.5-2B | 3.8 GB | GPU, about 6 GB | 0.766 | 0.800 |
+| [tokimoa/uratori-ja-2b](https://huggingface.co/tokimoa/uratori-ja-2b) v1.1 | Qwen3.5-2B | 3.8 GB | GPU, about 6 GB | 0.781 | 0.797 |
 | [tokimoa/uratori-ja-310m](https://huggingface.co/tokimoa/uratori-ja-310m) v0.2 | ModernBERT-Ja-310M | 1.3 GB | CPU | 0.686 | 0.693 |
 | [tokimoa/uratori-ja-2b-mlx-8bit](https://huggingface.co/tokimoa/uratori-ja-2b-mlx-8bit), [-4bit](https://huggingface.co/tokimoa/uratori-ja-2b-mlx-4bit) | MLX versions of 2b for Apple silicon | 2.0 / 1.1 GB | Mac | 0.768 / 0.754 | 0.807 / 0.783 |
 | [tokimoa/uratori-ja-4b-mlx-8bit](https://huggingface.co/tokimoa/uratori-ja-4b-mlx-8bit), [-4bit](https://huggingface.co/tokimoa/uratori-ja-4b-mlx-4bit) | MLX versions of 4b for Apple silicon | 4.5 / 2.4 GB | Mac | 0.865 / 0.857 | 0.863 / 0.853 |
@@ -82,7 +82,7 @@ print(answers["contradict"]["noul"])
 # 0.76
 ```
 
-`state` is a string or a dict of named texts; dict keys can be referenced from a question as `` `key` ``. Questions in one call share the state and are judged independently. Probabilities are temperature-scaled by default (`calibrate=False` for the raw softmax). Inputs longer than the model's limit (1,024 tokens for 310m, 2,048 for 2b, 4,096 for 4b and 9b) raise a `ValueError` instead of being truncated.
+`state` is a string or a dict of named texts; dict keys can be referenced from a question as `` `key` ``. Questions in one call share the state and are judged independently. Probabilities are temperature-scaled by default (`calibrate=False` for the raw softmax). Inputs longer than the model's limit (1,024 tokens for 310m, 4,096 for 2b, 4b and 9b) raise a `ValueError` instead of being truncated.
 
 Question types:
 
